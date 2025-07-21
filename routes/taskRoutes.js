@@ -1,27 +1,32 @@
 const express = require('express');
 const router = express.Router(); //to create a mini Express app just for task routes
-
+const authenticate = require('../middleware/authMiddleware');
 
 // Import controller functions
 const {
   getAllTasks,
+  getTaskById,
   createTask,
   updateTask,
   deleteTask
 } = require('../controllers/taskController');
 
 // Define routes and link them to controller functions
+// All routes require authentication
 
-// GET /tasks → get all tasks
-router.get('/tasks', getAllTasks);
+// GET / → get all tasks
+router.get('/', authenticate, getAllTasks);
 
-// POST /tasks → create a new task
-router.post('/tasks', createTask);
+// GET /:id → get a task by ID
+router.get('/:id', authenticate, getTaskById);
 
-// PUT /tasks/:id → update a task by ID
-router.put('/tasks/:id', updateTask);
+// POST / → create a new task
+router.post('/', authenticate, createTask);
 
-// DELETE /tasks/:id → delete a task by ID
-router.delete('/tasks/:id', deleteTask);
+// PUT /:id → update a task by ID
+router.put('/:id', authenticate, updateTask);
+
+// DELETE /:id → delete a task by ID
+router.delete('/:id', authenticate, deleteTask);
 
 module.exports = router;
