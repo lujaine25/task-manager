@@ -1,3 +1,4 @@
+require('dotenv').config();
 const basicAuth = (req, res, next) => {
   const auth = req.headers.authorization;
 
@@ -10,7 +11,7 @@ const basicAuth = (req, res, next) => {
   const decoded = Buffer.from(base64Credentials, 'base64').toString();
   const [username, password] = decoded.split(':');
 
-  if (username === 'admin' && password === '1234') {
+  if (username === process.env.USERNAME && password === process.env.PASSWORD)  {
     next(); // Let the request continue
   } else {
     res.status(403).send('Access denied');
