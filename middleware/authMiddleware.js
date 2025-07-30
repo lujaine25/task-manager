@@ -16,7 +16,7 @@ const authenticate = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, SECRET);
-    req.userId = decoded.userId; // Attach to request
+    req.user = { id: decoded.userId, role: decoded.role }; // Attach role too,authMiddleware decodes token and sets req.user = { id, role }
     next();
   } catch (err) {
     res.status(403).json({ message: 'Invalid token' });
