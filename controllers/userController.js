@@ -1,61 +1,64 @@
-const fs = require('fs');
-const path = require('path');
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
+const userService = require('../services/userService');
 
-const usersPath = path.join(__dirname, '../data/users.json');
-const SECRET = process.env.JWT_SECRET; 
-if (!SECRET) {
-  throw new Error("JWT_SECRET is not set in .env file");
-}
-
-const readUsers = () => {
-  if (!fs.existsSync(usersPath)) return [];
-  const data = fs.readFileSync(usersPath, 'utf8');
-  return data ? JSON.parse(data) : [];
-};
-
-const writeUsers = (users) => {
-  fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-};
-
-// 🔐 Signup (hash password)
 const signup = async (req, res) => {
-  const { username, password } = req.body;
-  const users = readUsers();
-
-  const existingUser = users.find(user => user.username === username);
-  if (existingUser) return res.status(400).json({ message: 'User already exists' });
-
-  const hashedPassword = await bcrypt.hash(password, 10); // saltRounds = 10
-
-  const newUser = {
-    id: Date.now(),
-    username,
-    password: hashedPassword
-  };
-
-  users.push(newUser);
-  writeUsers(users);
-  res.status(201).json({ message: 'User created' });
+  try {
+    const result = await userService.signup(req.body);
+    res.status(201).json(result);
+  } catch (error) {
+    res.status(error.status || 500).json({ message: error.message });
+  }
 };
 
-// 🔐 Login (compare password)
 const login = async (req, res) => {
-  const { username, password } = req.body;
-  const users = readUsers();
+  try {
+    const result = await userService.login(req.body);
+    res.json(result);
+  } catch (error) {
+    res.status(error.status || 500).json({ message: error.message });
+  }
+};
 
-  const user = users.find(u => u.username === username);
-  if (!user) return res.status(401).json({ message: 'Invalid credentials' });
+const getAllUsers = (req, res) => {
+  try {
+    const users = userService.getAllUsers();
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) return res.status(401).json({ message: 'Invalid credentials' });
+const getUserById = (req, res) => {
+  try {
+    const user = userService.getUserById(req.params.id);
+    res.json(user);
+  } catch (error) {
+    res.status(error.status || 500).json({ message: error.message });
+  }
+};
 
-  const token = jwt.sign({ userId: user.id }, SECRET, { expiresIn:'1y'});
-  res.json({ token });
+const updateUser = (req, res) => {
+  try {
+    const result = userService.updateUser(req.params.id, req.body);
+    res.json(result);
+  } catch (error) {
+    res.status(error.status || 500).json({ message: error.message });
+  }
+};
+
+const deleteUser = (req, res) => {
+  try {
+    const result = userService.deleteUser(req.params.id);
+    res.json(result);
+  } catch (error) {
+    res.status(error.status || 500).json({ message: error.message });
+  }
 };
 
 module.exports = {
   signup,
-  login
+  login,
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
 };
